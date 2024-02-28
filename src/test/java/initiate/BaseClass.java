@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.openqa.selenium.By;
@@ -46,7 +47,6 @@ import com.relevantcodes.extentreports.ExtentReports;
 import com.relevantcodes.extentreports.ExtentTest;
 import com.relevantcodes.extentreports.LogStatus;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import pages.*;
 import utility.*;
 
@@ -200,22 +200,50 @@ public class BaseClass {
 		/*
 		 * Initialize driver initiate the browser
 		 */
+		log(browser);
 
-		ChromeOptions options = new ChromeOptions();
-		Map<String, Object> prefs = new HashMap<String, Object>();
-		options.setExperimentalOption("prefs", prefs);
-		WebDriverManager.chromedriver().setup();
-		options.addArguments("disable-infobars");
-		driver = new ChromeDriver(options);
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-//		driver.manage().timeouts().scriptTimeout(Duration.ofMinutes(2));
-//		driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(10));
-		wait = new WebDriverWait(driver, Duration.ofSeconds(con.getExplicitTime()));
-		maximizeBrowser();
+		if (browser.equalsIgnoreCase("chrome")) {
+			ChromeOptions options = new ChromeOptions();
+			Map<String, Object> prefs = new HashMap<String, Object>();
+			prefs.put("download.default_directory", System.getProperty("user.dir") + File.separator + "downloads");
+			options.setExperimentalOption("prefs", prefs);
+
+			if (SystemUtils.OS_NAME.equalsIgnoreCase("Linux")) {
+				options.addArguments("headless");
+				options.addArguments("disable-gpu");
+				options.addArguments("--window-size=1325x744");
+				driver = new ChromeDriver(options);
+
+			} else if (SystemUtils.OS_NAME.contains("Windows")) {
+
+				if (headless.equalsIgnoreCase("y")) {
+					options.addArguments("--headless");
+				}
+				options.addArguments("disable-infobars");
+				options.addArguments("--remote-allow-origins=*");
+				driver = new ChromeDriver(options);
+			}
+			driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+//			driver.manage().timeouts().scriptTimeout(Duration.ofMinutes(2));
+//			driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(10));
+			wait = new WebDriverWait(driver, Duration.ofSeconds(con.getExplicitTime()));
+			maximizeBrowser();
+
+			extent.addSystemInfo("Browser", con.getBrowser().toUpperCase().trim());
+			if (headless.equalsIgnoreCase("y")) {
+				extent.addSystemInfo("Mode", " : Headless");
+				logger.info("Running Headless");
+			}
+
+		} else if (browser.equalsIgnoreCase("firefox")) {
+			// setup the firefoxdriver using WebDriverManager
+
+		}
 		driver.get(baseurl);
 		waitForPageLoaded();
+		logger.info("Browser Opened");
 
-		logger.info("Chrome Browser Opened");
+		/////////////////////////////////////////
 
 	}
 
@@ -224,6 +252,7 @@ public class BaseClass {
 		/* maximizing window for headless mode */
 		if (headless.equalsIgnoreCase("y"))
 			driver.manage().window().setSize(new Dimension(1440, 900));
+		logger.info("Maximize Window Size of browser");
 	}
 
 	/*
@@ -317,8 +346,6 @@ public class BaseClass {
 		element.sendKeys(input);
 //		}
 	}
-	
-	
 
 	/*
 	 * clear a webelement field
@@ -328,8 +355,6 @@ public class BaseClass {
 			element.sendKeys(Keys.BACK_SPACE);
 		}
 	}
-	
-	
 
 	/*
 	 * Time pause
@@ -347,7 +372,6 @@ public class BaseClass {
 	public boolean isValidEmail(String email) {
 		return email.matches("^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$");
 	}
-	
 
 	public static String getCurrentTimeStampString(String timeformat) {
 		/*
@@ -440,6 +464,12 @@ public class BaseClass {
 		Random random = new Random();
 		int value = random.nextInt(max - min + 1) + min;
 		return value;
+	}
+
+	public static void log(String msg) {
+
+		System.out.println("======" + msg + "======");
+		Reporter.log("<br>" + msg);
 	}
 
 }
