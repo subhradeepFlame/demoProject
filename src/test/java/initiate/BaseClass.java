@@ -28,6 +28,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -170,8 +173,13 @@ public class BaseClass {
 
 	@AfterClass
 	public void close() {
-		driver.close();
-		driver.quit();
+		if (browser.equalsIgnoreCase("chrome")) {
+			driver.close();
+			driver.quit();
+		} else if (browser.equalsIgnoreCase("firefox")) {
+			driver.close();
+		}
+
 	}
 
 	@AfterSuite
@@ -236,7 +244,37 @@ public class BaseClass {
 			}
 
 		} else if (browser.equalsIgnoreCase("firefox")) {
-			// setup the firefoxdriver using WebDriverManager
+			// setup the firefox driver using WebDriverManager
+			FirefoxProfile profile = new FirefoxProfile();
+			profile.setPreference("browser.download.dir",
+					System.getProperty("user.dir") + File.separator + "downloads");
+
+			FirefoxOptions options = new FirefoxOptions();
+			options.setProfile(profile);
+			if (SystemUtils.OS_NAME.equalsIgnoreCase("Linux")) {
+				options.addArguments("headless");
+				options.addArguments("disable-gpu");
+				options.addArguments("--window-size=1325x744");
+				driver = new FirefoxDriver(options);
+
+			} else if (SystemUtils.OS_NAME.contains("Windows")) {
+
+				if (headless.equalsIgnoreCase("y")) {
+					options.addArguments("--headless");
+				}
+				driver = new FirefoxDriver(options);
+			}
+			driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+//			driver.manage().timeouts().scriptTimeout(Duration.ofMinutes(2));
+//			driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(10));
+			wait = new WebDriverWait(driver, Duration.ofSeconds(con.getExplicitTime()));
+			maximizeBrowser();
+
+			extent.addSystemInfo("Browser", con.getBrowser().toUpperCase().trim());
+			if (headless.equalsIgnoreCase("y")) {
+				extent.addSystemInfo("Mode", " : Headless");
+				logger.info("Running Headless");
+			}
 
 		}
 		driver.get(baseurl);
