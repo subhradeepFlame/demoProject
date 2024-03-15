@@ -4,7 +4,7 @@
 		<theme>standard</theme>
 		<encoding>UTF-8</encoding>
 		<protocol>http</protocol>
-		<documentTitle>HeatXtreme - Automation Testing Report</documentTitle>
+		<documentTitle>Automation Testing Report</documentTitle>
 		<reportName>
 		 <![CDATA[
                <img class="main-logo" src='https://www.codeclouds.com/wp-content/themes/CodeClouds/images/codeclouds_colour.svg' /> 
