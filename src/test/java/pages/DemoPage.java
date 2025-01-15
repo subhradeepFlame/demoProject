@@ -14,7 +14,7 @@ public class DemoPage extends CommonPage{
 	public WebElement DemoXpath;
 	
 	public void demo() {
-		System.out.println("demo test");
+		System.out.println("demo testt");
 	}
 
 }
